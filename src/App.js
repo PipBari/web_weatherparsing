@@ -10,7 +10,7 @@ function App() {
   return (
     <Provider store={store}>
       <div className="App">
-        <h1>Weather Monitor</h1>
+        <h1></h1>
         <Weather />
       </div>
     </Provider>

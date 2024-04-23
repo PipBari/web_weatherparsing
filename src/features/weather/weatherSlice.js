@@ -2,12 +2,12 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 const initialState = {
-  data: {},
+  data: [],
   status: 'idle',
   error: null
 };
 
-export const fetchWeather = createAsyncThunk('weather/fetchWeather', async (city, { rejectWithValue }) => {
+export const fetchWeather = createAsyncThunk('weather/fetchWeather', async (city, { getState, rejectWithValue }) => {
   try {
     const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=81592fd082211aafdeee651e9fc04176&units=metric&lang=ru`);
     return response.data;
@@ -17,33 +17,33 @@ export const fetchWeather = createAsyncThunk('weather/fetchWeather', async (city
 });
 
 const weatherSlice = createSlice({
-    name: 'weather',
-    initialState,
-    reducers: {
-      resetError(state) {
-        state.error = null;
-        state.data = {}; 
-      }
+  name: 'weather',
+  initialState,
+  reducers: {
+    resetError(state) {
+      state.error = null;
     },
-    extraReducers(builder) {
-      builder
-        .addCase(fetchWeather.pending, (state) => {
-          state.status = 'loading';
-          state.error = null;
-          state.data = {};
-        })
-        .addCase(fetchWeather.fulfilled, (state, action) => {
-          state.status = 'succeeded';
-          state.data = action.payload;
-        })
-        .addCase(fetchWeather.rejected, (state, action) => {
-          state.status = 'failed';
-          state.error = action.payload.message || "Ошибка запроса";
-          state.data = {}; 
-        });
+    clearHistory(state) {
+      state.data = []; 
     }
-  });  
+  },
+  extraReducers(builder) {
+    builder
+      .addCase(fetchWeather.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchWeather.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data.unshift(action.payload);
+      })
+      .addCase(fetchWeather.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload.message;
+      });
+  }
+});
 
-export const { resetError } = weatherSlice.actions;
+export const { resetError, clearHistory } = weatherSlice.actions;
 
 export default weatherSlice.reducer;
