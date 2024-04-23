@@ -1,18 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { fetchWeather as fetchWeatherRx } from '../../services/weatherService';
 
 const initialState = {
+  currentWeather: null,
   data: [],
   status: 'idle',
   error: null
 };
 
-export const fetchWeather = createAsyncThunk('weather/fetchWeather', async (city, { getState, rejectWithValue }) => {
+export const fetchWeather = createAsyncThunk('weather/fetchWeather', async (city, { rejectWithValue }) => {
   try {
-    const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=81592fd082211aafdeee651e9fc04176&units=metric&lang=ru`);
-    return response.data;
+    const data = await fetchWeatherRx(city).toPromise();
+    return data;
   } catch (error) {
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(error.message);
   }
 });
 
@@ -24,7 +25,7 @@ const weatherSlice = createSlice({
       state.error = null;
     },
     clearHistory(state) {
-      state.data = []; 
+      state.data = [];
     }
   },
   extraReducers(builder) {
@@ -32,16 +33,19 @@ const weatherSlice = createSlice({
       .addCase(fetchWeather.pending, (state) => {
         state.status = 'loading';
         state.error = null;
+        state.currentWeather = null; 
       })
       .addCase(fetchWeather.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.data.unshift(action.payload);
+        state.currentWeather = action.payload; 
+        state.data.unshift(action.payload); 
       })
       .addCase(fetchWeather.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload.message;
+        state.error = action.payload;
+        state.currentWeather = null;
       });
-  }
+  }  
 });
 
 export const { resetError, clearHistory } = weatherSlice.actions;

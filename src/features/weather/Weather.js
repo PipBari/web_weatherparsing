@@ -10,7 +10,7 @@ import ErrorMessage from './components/ErrorMessage';
 function Weather() {
   const [city, setCity] = useState('');
   const dispatch = useDispatch();
-  const weather = useSelector(state => state.weather.data[0]);
+  const weather = useSelector(state => state.weather.currentWeather);
   const status = useSelector(state => state.weather.status);
   const error = useSelector(state => state.weather.error);
 
