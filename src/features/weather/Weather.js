@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchWeather, resetError } from './weatherSlice';
+import { resetError } from './weatherSlice';
+import { fetchWeather, weatherSearchResults$ } from '../../services/weatherService';
 import SearchForm from './components/SearchForm';
 import WeatherDisplay from './components/WeatherDisplay';
 import WeatherHistory from './components/WeatherHistory';
@@ -14,10 +15,23 @@ function Weather() {
   const status = useSelector(state => state.weather.status);
   const error = useSelector(state => state.weather.error);
 
+  useEffect(() => {
+    const subscription = weatherSearchResults$.subscribe({
+      next: (data) => {
+        dispatch({ type: 'weather/fetchWeather/fulfilled', payload: data });
+      },
+      error: (err) => {
+        dispatch({ type: 'weather/fetchWeather/rejected', payload: err.message }); 
+      }
+    });
+
+    return () => subscription.unsubscribe();  // Отписка
+  }, [dispatch]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(resetError());
-    dispatch(fetchWeather(city));
+    fetchWeather(city); 
   };
 
   return (
