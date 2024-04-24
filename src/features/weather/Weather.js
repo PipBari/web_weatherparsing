@@ -7,6 +7,7 @@ import WeatherDisplay from './components/WeatherDisplay';
 import WeatherHistory from './components/WeatherHistory';
 import Loading from './components/Loading';
 import ErrorMessage from './components/ErrorMessage';
+import WeatherSummary from './components/WeatherSummary'; 
 
 function Weather() {
   const [city, setCity] = useState('');
@@ -18,14 +19,18 @@ function Weather() {
   useEffect(() => {
     const subscription = weatherSearchResults$.subscribe({
       next: (data) => {
-        dispatch({ type: 'weather/fetchWeather/fulfilled', payload: data });
+        if (data.error) {
+          dispatch({ type: 'weather/fetchWeather/rejected', payload: data.message });
+        } else {
+          dispatch({ type: 'weather/fetchWeather/fulfilled', payload: data });
+        }
       },
       error: (err) => {
-        dispatch({ type: 'weather/fetchWeather/rejected', payload: err.message }); 
+        dispatch({ type: 'weather/fetchWeather/rejected', payload: err.message });
       }
     });
 
-    return () => subscription.unsubscribe();  // Отписка
+    return () => subscription.unsubscribe(); 
   }, [dispatch]);
 
   const handleSubmit = (e) => {
@@ -40,7 +45,12 @@ function Weather() {
       <SearchForm city={city} setCity={setCity} handleSubmit={handleSubmit} />
       {status === 'loading' && <Loading />}
       {error && <ErrorMessage error={error} />}
-      {weather && <WeatherDisplay weather={weather} />}
+      {weather && (
+        <>
+          <WeatherDisplay weather={weather} />
+          <WeatherSummary />
+        </>
+      )}
       <WeatherHistory />
     </div>
   );
